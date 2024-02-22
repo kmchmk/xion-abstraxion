@@ -5,9 +5,9 @@ import {
   Abstraxion,
   useAbstraxionAccount,
   useAbstraxionSigningClient,
+  useModal,
 } from "@burnt-labs/abstraxion";
 import { Button } from "@burnt-labs/ui";
-import "@burnt-labs/ui/styles.css";
 import type { ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 
 // Example XION counter contract
@@ -19,7 +19,7 @@ export default function Page(): JSX.Element {
   const { client } = useAbstraxionSigningClient();
 
   // General state hooks
-  const [isOpen, setIsOpen] = useState(false);
+  const [_, setIsOpen] = useModal();
   const [loading, setLoading] = useState(false);
   const [executeResult, setExecuteResult] = useState<ExecuteResult | undefined>(
     undefined
@@ -40,8 +40,6 @@ export default function Page(): JSX.Element {
   useEffect(() => {
     if (client) {
       console.log("client", client);
-      console.log("client.granteeAddress", client.granteeAddress);
-      console.log("client.granterAddress", client.granterAddress);
     }
   }, [client]);
 
@@ -51,7 +49,7 @@ export default function Page(): JSX.Element {
 
     try {
       const executionResponse = await client?.execute(
-        client.granterAddress,
+        account.bech32Address,
         deployedContractAddress,
         msg,
         "auto"
@@ -88,20 +86,14 @@ export default function Page(): JSX.Element {
     setLoading(true);
 
     try {
-      const granteeBalance = await client?.getBalance(
-        client.granteeAddress,
+      const balance = await client?.getBalance(
+        account.bech32Address,
         "uxion"
       );
-      console.log("granteeBalance", granteeBalance);
+      console.log("Balance", balance);
 
-      const granterBalance = await client?.getBalance(
-        client.granterAddress,
-        "uxion"
-      );
-
-      console.log("granterBalance", granterBalance);
       alert(
-        `Grantee: ${granteeBalance?.amount} ${granteeBalance?.denom}\nGranter: ${granterBalance?.amount} ${granterBalance?.denom}`
+        `Balance: ${balance?.amount} ${balance?.denom}`
       );
     } catch (error) {
       alert(error);
@@ -165,7 +157,6 @@ export default function Page(): JSX.Element {
         </Button>
       ) : null}
       <Abstraxion
-        isOpen={isOpen}
         onClose={() => {
           setIsOpen(false);
         }}
@@ -174,18 +165,10 @@ export default function Page(): JSX.Element {
         <div className="flex flex-col gap-4 w-full">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Grantee:
+              Address:
             </span>
             <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
-              {client.granteeAddress}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Granter:
-            </span>
-            <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
-              {client.granterAddress}
+              {account.bech32Address}
             </span>
           </div>
         </div>
